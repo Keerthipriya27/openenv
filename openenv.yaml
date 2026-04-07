@@ -1,0 +1,93 @@
+name: cybersecurity-threat-detection
+version: "1.0.0"
+description: "AI training environment for cybersecurity threat detection and response. Agents learn to detect threats, classify attacks, and take protective actions in realistic scenarios."
+
+author: "Security AI Team"
+license: "MIT"
+
+environment:
+  class: "env.environment.CyberSecurityEnv"
+  max_episodes: 1000
+  max_steps_per_episode: 7
+
+action_space:
+  type: discrete
+  n_actions: 4
+  actions:
+    - name: "detect_threat"
+      description: "Flag a security event as a potential threat"
+    - name: "classify_attack"
+      description: "Classify the type of attack detected"
+    - name: "block_ip"
+      description: "Block the suspicious IP address"
+    - name: "ignore"
+      description: "Ignore the security event as benign"
+
+observation_space:
+  type: dict
+  schema:
+    logs:
+      type: array
+      items: string
+      description: "Security event logs"
+    threat_detected:
+      type: boolean
+      description: "Current threat detection status"
+    attack_type:
+      type: string
+      nullable: true
+      description: "Identified attack type"
+    ip_blocked:
+      type: boolean
+      description: "IP blocking status"
+    steps:
+      type: integer
+      description: "Number of steps in current episode"
+
+reward_range:
+  min: -2.0
+  max: 2.0
+  description: "Reward includes immediate feedback and penalties for incorrect actions"
+
+tasks:
+  - id: "easy"
+    name: "Simple Threat Detection"
+    description: "Detect a basic suspicious login attempt"
+    difficulty: "easy"
+    scenario: "Failed login from unknown IP"
+    expected_actions: ["detect_threat", "classify_attack", "block_ip"]
+    max_steps: 5
+    
+  - id: "medium"
+    name: "Attack Classification"
+    description: "Detect and classify an SQL injection attack"
+    difficulty: "medium"
+    scenario: "SQL injection detected in logs"
+    expected_actions: ["detect_threat", "classify_attack"]
+    max_steps: 6
+    
+  - id: "hard"
+    name: "Full Incident Response"
+    description: "Respond to a complete DDoS attack with detection, classification, and blocking"
+    difficulty: "hard"
+    scenario: "DDoS attack traffic spike detected"
+    expected_actions: ["detect_threat", "classify_attack", "block_ip"]
+    max_steps: 7
+
+evaluation_metrics:
+  - name: "accuracy"
+    description: "Percentage of correct classifications"
+  - name: "response_time"
+    description: "Number of steps to complete task"
+  - name: "false_positive_rate"
+    description: "Ratio of incorrect flags to total actions"
+
+real_world_use_case: |
+  This environment simulates a Security Operations Center (SOC) analyst's decision-making process.
+  Agents trained here can:
+  - Detect anomalies in security logs
+  - Classify attack types (brute-force, SQL injection, DDoS, etc.)
+  - Take automated response actions (blocking, alerting, investigation)
+  - Generalize to new attack patterns
+  
+  This reduces the burden on human analysts by automating routine threat detection and response.

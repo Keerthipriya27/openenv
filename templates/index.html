@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenEnv Agent Console</title>
+  <style>
+    :root {
+      --bg-a: #0b132b;
+      --bg-b: #1c2541;
+      --panel: rgba(255, 255, 255, 0.1);
+      --stroke: rgba(255, 255, 255, 0.18);
+      --text: #e5ecf4;
+      --muted: #adc0d3;
+      --brand: #00d4ff;
+      --good: #34d399;
+      --bad: #fb7185;
+      --warn: #fbbf24;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Segoe UI", "Gill Sans", sans-serif;
+      min-height: 100vh;
+      background:
+        radial-gradient(900px 600px at 0% 100%, rgba(0, 212, 255, 0.15), transparent 60%),
+        radial-gradient(800px 500px at 100% 0%, rgba(251, 191, 36, 0.16), transparent 55%),
+        linear-gradient(130deg, var(--bg-a), var(--bg-b));
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    .shell {
+      width: min(980px, 100%);
+      border: 1px solid var(--stroke);
+      border-radius: 20px;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+      box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--stroke);
+      background: rgba(7, 15, 33, 0.65);
+      backdrop-filter: blur(6px);
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      letter-spacing: 0.5px;
+    }
+
+    .status {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, 0.03);
+      flex-wrap: wrap;
+    }
+
+    select, button {
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: rgba(9, 14, 25, 0.6);
+    }
+
+    button {
+      cursor: pointer;
+      background: linear-gradient(90deg, #00d4ff, #38bdf8);
+      color: #0b132b;
+      font-weight: 700;
+      border: 0;
+    }
+
+    .feed {
+      min-height: 360px;
+      max-height: 60vh;
+      overflow: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bubble {
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+      line-height: 1.4;
+      animation: reveal 0.28s ease;
+    }
+
+    .bubble.agent { border-left: 4px solid var(--brand); }
+    .bubble.good { border-left: 4px solid var(--good); }
+    .bubble.warn { border-left: 4px solid var(--warn); }
+    .bubble.bad { border-left: 4px solid var(--bad); }
+
+    .meta {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes reveal {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 720px) {
+      .topbar h1 { font-size: 1rem; }
+      .feed { max-height: 65vh; }
+      .controls { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <h1>OpenEnv Agent Console</h1>
+      <div id="status" class="status">Idle</div>
+    </header>
+
+    <section class="controls">
+      <label for="task">Task:</label>
+      <select id="task">
+        <option value="easy" {% if selected == 'easy' %}selected{% endif %}>easy</option>
+        <option value="medium" {% if selected == 'medium' %}selected{% endif %}>medium</option>
+        <option value="hard" {% if selected == 'hard' %}selected{% endif %}>hard</option>
+      </select>
+      <button id="runBtn" type="button">Run Agent</button>
+    </section>
+
+    <section id="feed" class="feed">
+      <div class="bubble agent">
+        <div class="meta">System</div>
+        Select a task and click Run Agent. Steps will appear here like an agent timeline.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const runBtn = document.getElementById("runBtn");
+    const feed = document.getElementById("feed");
+    const taskSelect = document.getElementById("task");
+    const statusEl = document.getElementById("status");
+
+    function addBubble(text, kind = "agent", meta = "Agent") {
+      const el = document.createElement("div");
+      el.className = `bubble ${kind}`;
+      el.innerHTML = `<div class="meta">${meta}</div>${text}`;
+      feed.appendChild(el);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function rewardClass(value) {
+      if (value < 0) return "bad";
+      if (value < 0.2) return "warn";
+      return "good";
+    }
+
+    async function runAgent() {
+      runBtn.disabled = true;
+      const task = taskSelect.value;
+      statusEl.textContent = `Running ${task}...`;
+      feed.innerHTML = "";
+      addBubble(`Starting task <strong>${task}</strong>.`, "agent", "System");
+
+      try {
+        const response = await fetch("/agent/run", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ task })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        for (const step of data.history) {
+          const cls = rewardClass(step.reward);
+          const text = `Step ${step.step}: <strong>${step.action}</strong><br/>Reward: ${step.reward.toFixed(3)}`;
+          addBubble(text, cls, "Agent Action");
+          await new Promise((resolve) => setTimeout(resolve, 280));
+        }
+
+        addBubble(`Task <strong>${data.task}</strong> complete.<br/>Final Score: <strong>${data.score.toFixed(2)}</strong>`, "good", "Result");
+        statusEl.textContent = `Completed ${data.task}`;
+      } catch (err) {
+        addBubble(`Run failed: ${err.message}`, "bad", "Error");
+        statusEl.textContent = "Error";
+      } finally {
+        runBtn.disabled = false;
+      }
+    }
+
+    runBtn.addEventListener("click", runAgent);
+  </script>
+</body>
+</html>
