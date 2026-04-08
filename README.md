@@ -111,7 +111,7 @@ Environment supports debug mode:
 ## Run Locally
 
 1. Activate environment and install deps.
-2. Configure required variables: OPENAI_API_KEY (or HF_TOKEN), MODEL_NAME, API_BASE_URL.
+2. Configure required variables: API_KEY, MODEL_NAME, API_BASE_URL.
 3. For free local runs, set USE_MOCK=true.
 4. For submission baseline with OpenAI client, set USE_MOCK=false.
 3. Run:
@@ -122,10 +122,9 @@ python inference.py
 
 ## Required Environment Variables (Hackathon)
 
-- OPENAI_API_KEY: OpenAI-compatible API key
-- HF_TOKEN: optional fallback key alias used by this project
+- API_KEY: OpenAI-compatible API key injected by the hackathon proxy
 - MODEL_NAME: model identifier used by inference.py
-- API_BASE_URL: OpenAI-compatible API endpoint
+- API_BASE_URL: OpenAI-compatible API endpoint injected by the hackathon proxy
 - USE_MOCK: set "true" for offline mock runs, "false" for real client runs
 
 ## Service Endpoints (HF/Docker Runtime)

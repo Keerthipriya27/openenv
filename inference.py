@@ -11,22 +11,22 @@ use_mock = os.getenv("USE_MOCK", "false").strip().lower() == "true"
 benchmark_name = os.getenv("BENCHMARK_NAME", "cybersecurity-threat-detection")
 success_threshold = float(os.getenv("SUCCESS_SCORE_THRESHOLD", "0.7"))
 
-api_base_url = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+api_base_url = os.getenv("API_BASE_URL")
 model_name = os.getenv("MODEL_NAME", "gpt-4")
-api_key = os.getenv("OPENAI_API_KEY") or os.getenv("HF_TOKEN")
+api_key = os.getenv("API_KEY")
 
 client = None
 if not use_mock:
-    if not api_key:
+    if not api_key or not api_base_url:
         raise ValueError(
-            "No API key found. Set OPENAI_API_KEY (or HF_TOKEN) in .env or as an environment variable."
+            "Missing API_BASE_URL or API_KEY. The submission must use the injected LiteLLM proxy variables."
         )
 
     from openai import OpenAI
 
     client = OpenAI(
         api_key=api_key,
-        base_url=api_base_url if api_base_url != "https://api.openai.com/v1" else None,
+        base_url=api_base_url,
     )
 
 # Initialize random generator for consistent behavior across runs
