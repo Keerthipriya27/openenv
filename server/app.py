@@ -27,6 +27,7 @@ class StepRequest(BaseModel):
 
 @app.get("/")
 def root():
+    
     return {"status": "ok", "service": "openenv-cybersecurity"}
 
 
@@ -36,12 +37,13 @@ def health():
 
 
 @app.post("/reset")
-def reset_env(payload: ResetRequest):
+def reset_env(payload: ResetRequest | None = None):
     global WEB_ENV
-    WEB_ENV = CyberSecurityEnv(task_id=payload.task)
+    task = payload.task if payload else "easy"
+    WEB_ENV = CyberSecurityEnv(task_id=task)
     observation = WEB_ENV.reset()
     return {
-        "task": payload.task,
+        "task": task,
         "observation": observation,
         "done": WEB_ENV.done,
         "step": WEB_ENV.step_count,
