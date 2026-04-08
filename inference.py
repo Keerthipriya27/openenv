@@ -7,7 +7,6 @@ from env.environment import CyberSecurityEnv
 # Load environment variables from .env file
 load_dotenv()
 
-use_mock = os.getenv("USE_MOCK", "false").strip().lower() == "true"
 benchmark_name = os.getenv("BENCHMARK_NAME", "cybersecurity-threat-detection")
 success_threshold = float(os.getenv("SUCCESS_SCORE_THRESHOLD", "0.7"))
 
@@ -15,18 +14,20 @@ api_base_url = os.getenv("API_BASE_URL")
 model_name = os.getenv("MODEL_NAME", "gpt-4")
 api_key = os.getenv("API_KEY")
 
-client = None
-if not use_mock:
-    if not api_key or not api_base_url:
-        raise ValueError(
-            "Missing API_BASE_URL or API_KEY. The submission must use the injected LiteLLM proxy variables."
-        )
+use_mock_env = os.getenv("USE_MOCK", "false").strip().lower() == "true"
+use_mock = use_mock_env and not (api_key and api_base_url)
 
+client = None
+if api_key and api_base_url:
     from openai import OpenAI
 
     client = OpenAI(
         api_key=api_key,
         base_url=api_base_url,
+    )
+elif not use_mock:
+    raise ValueError(
+        "Missing API_BASE_URL or API_KEY. The submission must use the injected LiteLLM proxy variables."
     )
 
 # Initialize random generator for consistent behavior across runs

@@ -113,7 +113,7 @@ Environment supports debug mode:
 1. Activate environment and install deps.
 2. Configure required variables: API_KEY, MODEL_NAME, API_BASE_URL.
 3. For free local runs, set USE_MOCK=true.
-4. For submission baseline with OpenAI client, set USE_MOCK=false.
+4. For submission, make sure API_KEY and API_BASE_URL are available; proxy credentials override USE_MOCK.
 3. Run:
 
 ```bash
