@@ -136,7 +136,6 @@ When running app.py (default Docker command), the service exposes:
 - POST /reset -> reset environment and return initial observation
 - POST /step -> apply action and return transition
 - GET /state -> current environment state snapshot
-- POST /agent/run -> run one full task and return trajectory for dashboard
 
 ## Pre-Submission Validation
 
@@ -166,26 +165,14 @@ python inference.py
 
 ## Example Run (Output Contract)
 
-Inference output should follow this strict block format:
+Inference output should follow this strict single-line key=value format:
 
 ```text
-[START]
-Task: easy
-
-[STEP]
-Action: detect_threat
-Reward: 0.35
-
-[STEP]
-Action: classify_attack
-Reward: 0.35
-
-[STEP]
-Action: block_ip
-Reward: 1.0
-
-[END]
-Final Score: 1.0
+[START] task=easy env=cybersecurity-threat-detection model=gemini-2.0-flash
+[STEP] step=1 action=detect_threat reward=0.35 done=false error=null
+[STEP] step=2 action=classify_attack reward=0.35 done=false error=null
+[STEP] step=3 action=block_ip reward=1.00 done=true error=null
+[END] success=true steps=3 score=0.94 rewards=0.35,0.35,1.00
 ```
 
 No additional logging should be emitted by the environment itself.
