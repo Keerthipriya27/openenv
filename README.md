@@ -1,3 +1,12 @@
+---
+title: Openenv
+emoji: "🦀"
+colorFrom: gray
+colorTo: yellow
+sdk: docker
+pinned: false
+---
+
 # OpenEnv CyberSecurity Environment
 
 An OpenEnv-ready cyber incident response simulator designed for AI agent evaluation. The environment emulates Security Operations Center (SOC) workflows where an agent must detect, classify, and contain attacks under noisy and time-limited conditions.
